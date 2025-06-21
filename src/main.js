@@ -25,7 +25,6 @@ async function handlesubmit(event) {
   page = 1;
 
   clearGallery();
-  showLoader();
 
   if (searchQuery === '') {
     iziToast.show({
@@ -35,9 +34,10 @@ async function handlesubmit(event) {
       message:
         'Sorry, there are no images matching your search query. Please try again!',
     });
+    input.value = '';
     return;
   }
-
+  showLoader();
   try {
     const data = await getImagesByQuery(searchQuery, page);
 
