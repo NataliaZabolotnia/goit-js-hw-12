@@ -54,7 +54,7 @@ async function handlesubmit(event) {
     createGallery(data.hits);
 
     const totalElementsVisible = data.hits.length * page;
-    if (totalElementsVisible < data.totalHits) {
+    if (totalElementsVisible < data.totalHits && totalElementsVisible != 0) {
       showLoadMoreButton();
     } else {
       iziToast.show({
