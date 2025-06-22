@@ -25,6 +25,7 @@ async function handlesubmit(event) {
   page = 1;
 
   clearGallery();
+  hideLoadMoreButton();
 
   if (searchQuery === '') {
     iziToast.show({
@@ -42,6 +43,7 @@ async function handlesubmit(event) {
     const data = await getImagesByQuery(searchQuery, page);
 
     if (data.hits.length === 0) {
+      hideLoadMoreButton();
       iziToast.show({
         title: 'Hey',
         color: 'red',
@@ -52,9 +54,11 @@ async function handlesubmit(event) {
       return;
     }
     createGallery(data.hits);
-
+    const totalPages = Math.ceil(data.totalHits / perPage);
     const totalElementsVisible = data.hits.length * page;
-    if (totalElementsVisible < data.totalHits && totalElementsVisible != 0) {
+    console.log(totalElementsVisible, data.totalHits);
+
+    if (page < totalPages) {
       showLoadMoreButton();
     } else {
       iziToast.show({
@@ -74,33 +78,38 @@ async function handlesubmit(event) {
 async function handleclick(event) {
   event.preventDefault();
   page += 1;
-  const data = await getImagesByQuery(searchQuery, page);
-  showLoader();
-  createGallery(data.hits);
 
-  hideLoader();
+  try {
+    showLoader();
+    const data = await getImagesByQuery(searchQuery, page);
 
-  const listItem = document.querySelector('.list-item');
-  const { height: cardHeight } = listItem.getBoundingClientRect();
-  window.scrollBy({
-    top: cardHeight * 2,
-    left: 100,
-    behavior: 'smooth',
-  });
-
-  showLoadMoreButton();
-
-  const totalElementsVisible = page * perPage;
-
-  if (totalElementsVisible >= data.totalHits) {
+    createGallery(data.hits);
     hideLoader();
-    iziToast.show({
-      title: '!',
-      color: 'blue',
-      position: 'topRight',
-      message: 'We are sorry, but you have reached the end of search results',
+
+    const gallery = document.querySelector('.gallery');
+    const firstItem = gallery.firstElementChild;
+    const { height: cardHeight } = firstItem.getBoundingClientRect();
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
     });
-    hideLoadMoreButton();
-    return;
+
+    const totalPages = Math.ceil(data.totalHits / perPage);
+    const totalElementsVisible = page * perPage;
+    console.log(totalElementsVisible, data.totalHits);
+    if (page >= totalPages) {
+      hideLoader();
+      iziToast.show({
+        title: '!',
+        color: 'blue',
+        position: 'topRight',
+        message: 'We are sorry, but you have reached the end of search results',
+      });
+      hideLoadMoreButton();
+      return;
+    }
+    showLoadMoreButton();
+  } catch (error) {
+    console.error('Fetch error:', error);
   }
 }
